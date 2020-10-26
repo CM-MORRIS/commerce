@@ -31,7 +31,7 @@ class Listings(models.Model):
     current_price   = models.DecimalField(max_digits=11, decimal_places=2)
     start_date      = models.DateTimeField(auto_now=False, auto_now_add=False, default=django.utils.timezone.now)
     end_date        = models.DateTimeField(auto_now=False, auto_now_add=False, default=django.utils.timezone.now)
-    is_sold         = models.BooleanField()
+    is_sold         = models.BooleanField(default=False)
 
 class Bids(models.Model):
 
