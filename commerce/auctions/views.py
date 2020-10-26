@@ -8,7 +8,11 @@ from .models import User
 from .models import Listings
 
 def index(request):
-    return render(request, "auctions/index.html")
+    active_listings = Listings.objects.filter(is_sold=False)
+
+    return render(request, "auctions/index.html", {
+        "active_listings" : active_listings
+    })
 
 
 def login_view(request):
@@ -61,18 +65,6 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
-
-def active_listings(request):
-
-    active_listings = Listings.objects.filter(is_sold=False)
-
-    return render(request, "auctions/active_listings.html", {
-        "active_listings" : active_listings
-    })
-
-
-
-
 
 
 def create_listing(request):
