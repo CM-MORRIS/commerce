@@ -62,6 +62,19 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+def active_listings(request):
+
+    active_listings = Listings.objects.filter(is_sold=False)
+
+    return render(request, "auctions/active_listings.html", {
+        "active_listings" : active_listings
+    })
+
+
+
+
+
+
 def create_listing(request):
     if request.method == "GET":
         return render(request, "auctions/create_listing.html")
