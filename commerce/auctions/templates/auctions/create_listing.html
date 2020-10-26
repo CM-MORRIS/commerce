@@ -1,7 +1,22 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Create Listings</h2>
+    <h2>Create new listing! {{ title }}</h2>
+    <div class="form-group">
+      <form action = "{% url 'create_listing' %}" method = "POST">
 
-    Form here to add a new listing 
+
+        {% csrf_token %}​​​​
+          <input name="title" placeholder="new listing">
+          <input name="description" placeholder="description">
+          <input name="IMG_URL" placeholder="IMG_URL">
+          <input name="starting price" placeholder="starting price">
+          <input name="current price" placeholder="current price">
+          <input name="sold?" placeholder="yes/no">
+          <button id="create_listing" class="btn btn-primary" type="submit" value="SEESO">Create
+            </button>
+      </form>
+    </div>
+
+    Form here to add a new listing
 {% endblock %}
