@@ -7,7 +7,6 @@ from django.urls import reverse
 from .models import User
 from .models import Listings
 
-
 def index(request):
     return render(request, "auctions/index.html")
 
@@ -77,4 +76,17 @@ def active_listings(request):
 
 
 def create_listing(request):
-    return render(request, "auctions/create_listing.html")
+    if request.method == "GET":
+        return render(request, "auctions/create_listing.html")
+    elif request.method == "POST":
+        title = request.POST["title"]
+        description = request.POST["description"]
+        IMG_URL = request.POST["IMG_URL"]
+        starting_price = request.POST["starting price"]
+        current_price = request.POST["current price"]
+        create_listing = Listings(title = title, description = description, IMG_URL = IMG_URL,
+                         starting_price = starting_price, current_price = current_price, is_sold = 'True')
+        create_listing.save()
+        return render(request, "auctions/create_listing.html", {
+        "message": "successfully added to db"
+        })
