@@ -25,6 +25,7 @@ class Listings(models.Model):
     listing_id      = models.AutoField(primary_key=True)
     title           = models.CharField(max_length=100)
     description     = models.CharField(max_length=1000)
+    IMG_URL         = models.CharField(max_length=1000)
     category        = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=False, default='other')
     starting_price  = models.DecimalField(max_digits=11, decimal_places=2)
     current_price   = models.DecimalField(max_digits=11, decimal_places=2)
