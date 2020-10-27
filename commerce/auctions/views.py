@@ -3,9 +3,20 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
+from django import forms
+from datetime import date, datetime, timedelta
 
 from .models import User
 from .models import Listings
+
+class ListingsForm(forms.Form):
+    title = forms.CharField()
+    # categories = forms.Charfield()
+    description = forms.CharField()
+    IMG_URL = forms.CharField()
+    starting_price = forms.DecimalField()
+    number_of_days = forms.IntegerField(min_value=3, max_value=7)
 
 def index(request):
     active_listings = Listings.objects.filter(is_sold=False)
@@ -75,21 +86,29 @@ def listing_page(request, id):
         "listing" : listing
     })
 
-
-
-
 def create_listing(request):
-    if request.method == "GET":
-        return render(request, "auctions/create_listing.html")
-    elif request.method == "POST":
-        title = request.POST["title"]
-        description = request.POST["description"]
-        IMG_URL = request.POST["IMG_URL"]
-        starting_price = request.POST["starting price"]
-        current_price = request.POST["current price"]
-        create_listing = Listings(title = title, description = description, IMG_URL = IMG_URL,
-                         starting_price = starting_price, current_price = current_price, is_sold = 'True')
-        create_listing.save()
+
+    if request.method == "POST":
+        form = ListingsForm(request.POST)
+
+        if form.is_valid():
+
+            title           = form.cleaned_data["title"]
+            description     = form.cleaned_data["description"]
+            IMG_URL         = form.cleaned_data["IMG_URL"]
+            starting_price  = form.cleaned_data["starting_price"]
+            number_of_days  = form.cleaned_data["number_of_days"]
+            end_date        = datetime.today() + timedelta(days=number_of_days)
+
+            create_listing = Listings(title = title, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
+            create_listing.save()
+
+            return render(request, "auctions/create_listing.html", {
+
+                "message": "successfully added to db"
+            })
+
+    else:
         return render(request, "auctions/create_listing.html", {
-        "message": "successfully added to db"
+            "form": ListingsForm()
         })
