@@ -67,6 +67,17 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
+def listing_page(request, id):
+
+    listing = Listings.objects.get(pk=id)
+
+    return render(request, "auctions/individual_listing.html", {
+        "listing" : listing
+    })
+
+
+
+
 def create_listing(request):
     if request.method == "GET":
         return render(request, "auctions/create_listing.html")
