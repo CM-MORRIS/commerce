@@ -6,17 +6,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django import forms
 from datetime import date, datetime, timedelta
-
+from .forms import ListingsForm
 from .models import User
 from .models import Listings
 
-class ListingsForm(forms.Form):
-    title = forms.CharField()
-    # categories = forms.Charfield()
-    description = forms.CharField()
-    IMG_URL = forms.CharField()
-    starting_price = forms.DecimalField()
-    number_of_days = forms.IntegerField(min_value=3, max_value=7)
+
 
 def index(request):
     active_listings = Listings.objects.filter(is_sold=False)
@@ -105,7 +99,8 @@ def create_listing(request):
 
             return render(request, "auctions/create_listing.html", {
 
-                "message": "successfully added to db"
+
+                "form": ListingsForm()
             })
 
     else:

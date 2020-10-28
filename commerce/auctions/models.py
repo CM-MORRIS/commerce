@@ -3,18 +3,7 @@ from django.db import models
 import django.utils.timezone
 
 # Used in listings model
-CATEGORY_CHOICES = (
-    ('music','Music'),
-    ('fashion', 'Fashion'),
-    ('sporting_goods','Sporting Goods'),
-    ('electronics','Electronics'),
-    ('jewellery_and_watches','Jewellery & Watches'),
-    ('motors','Motors'),
-    ('toys_and_games','Toys & Games'),
-    ('collectables_and_antiques','Collectables & Antiques'),
-    ('home_and_garden','Home & Garden'),
-    ('other','Other')
-)
+
 
 # User table inherits from AbstractUser Django - built in user model, can add extra columns if needed
 class User(AbstractUser):
@@ -26,7 +15,7 @@ class Listings(models.Model):
     title           = models.CharField(max_length=1000)
     description     = models.CharField(max_length=1000)
     IMG_URL         = models.CharField(max_length=1000)
-    category        = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=False, default='other')
+    category        = models.CharField(max_length=50, null=False, default='other')
     starting_price  = models.DecimalField(default=0.0, max_digits=11, decimal_places=2)
     current_price   = models.DecimalField(default=0.0, max_digits=11, decimal_places=2)
     start_date      = models.DateTimeField(auto_now=False, auto_now_add=False, default=django.utils.timezone.now)
