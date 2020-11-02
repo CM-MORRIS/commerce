@@ -21,3 +21,6 @@ class ListingsForm(forms.Form):
     IMG_URL = forms.CharField()
     starting_price = forms.DecimalField()
     number_of_days = forms.IntegerField(min_value=3, max_value=7)
+
+class BiddingForm(forms.Form):
+    new_bid = forms.DecimalField()

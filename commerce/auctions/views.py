@@ -1,14 +1,15 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django import forms
 from datetime import date, datetime, timedelta
-from .forms import ListingsForm
-from .models import User
-from .models import Listings
+from .forms import ListingsForm, BiddingForm
+from .models import User, Listings, Bids
+from django.db.models import F
+from django.contrib import messages
 
 
 
@@ -72,14 +73,6 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
-def listing_page(request, id):
-
-    listing = Listings.objects.get(pk=id)
-
-    return render(request, "auctions/individual_listing.html", {
-        "listing" : listing
-    })
-
 def create_listing(request):
 
     if request.method == "POST":
@@ -98,8 +91,6 @@ def create_listing(request):
             create_listing.save()
 
             return render(request, "auctions/create_listing.html", {
-
-
                 "form": ListingsForm()
             })
 
@@ -107,3 +98,80 @@ def create_listing(request):
         return render(request, "auctions/create_listing.html", {
             "form": ListingsForm()
         })
+
+
+def listing_page(request, id):
+
+    if request.method == "GET":
+
+        try:
+            listing = Listings.objects.get(pk=id)
+
+        except:
+            print("Error: Listing page not found")
+            return HttpResponseRedirect(reverse("index"))
+
+        else:
+            return render(request, "auctions/individual_listing.html", {
+                "listing" : listing,
+                "bid_form": BiddingForm()
+            })
+
+
+def bidding(request, id):
+
+    # if bid is placed
+    if request.method == "POST":
+
+        bid_form = BiddingForm(request.POST)
+
+        if bid_form.is_valid():
+
+            new_bid_amount = bid_form.cleaned_data["new_bid"]
+
+            listing = Listings.objects.get(pk=id)
+
+            current_price = listing.current_price
+
+            # if bid valid add to db
+            if new_bid_amount > current_price:
+
+                # try add bid to db
+                try:
+                    # getting logged in user, 'request.user.id'
+                    current_user = User.objects.get(id=request.user.id)
+
+                    # adding users bid to db
+                    new_bid_add = Bids(user_id=current_user, listing_id=listing, bid_price=new_bid_amount)
+
+                    # updating listing current price to new bid amount
+                    listing.current_price = new_bid_amount
+
+                    # saving changes to db
+                    new_bid_add.save()
+                    listing.save()
+
+                # if cannot get from db
+                except:
+                    raise DoesNotExist("DoesNotExist")
+                    return redirect('listing_page', id=id)
+
+                # valid
+                else:
+                    print("successful bid")
+                    messages.success(request, 'Your bid was successful!', extra_tags='alert alert-success')
+                    return redirect('listing_page', id=id)
+
+            # bid not valid
+            else:
+                messages.error(request, 'Bid too low! Please raise the amount', extra_tags='alert alert-danger')
+                return redirect('listing_page', id=id)
+
+        # if form not valid
+        else:
+            return redirect('listing_page', id=id)
+
+
+    elif request.method == "GET":
+        print("bidding view GET request")
+        return redirect('listing_page', id=id)
