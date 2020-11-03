@@ -87,7 +87,10 @@ def create_listing(request):
             number_of_days  = form.cleaned_data["number_of_days"]
             end_date        = datetime.today() + timedelta(days=number_of_days)
 
-            create_listing = Listings(title = title, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
+            # getting logged in user, 'request.user.id'
+            current_user = User.objects.get(id=request.user.id)
+
+            create_listing = Listings(title = title, user_id=current_user, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
             create_listing.save()
 
             return render(request, "auctions/create_listing.html", {
