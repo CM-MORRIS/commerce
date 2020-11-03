@@ -9,7 +9,7 @@ class User(AbstractUser):
 class Listings(models.Model):
 
     listing_id      = models.AutoField(primary_key=True)
-    user_id         = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id         = models.ForeignKey(User, on_delete=models.CASCADE, default=0)
     title           = models.CharField(max_length=1000)
     description     = models.CharField(max_length=1000)
     IMG_URL         = models.CharField(max_length=1000)
