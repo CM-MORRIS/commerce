@@ -2,9 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import django.utils.timezone
 
-# Used in listings model
-
-
 # User table inherits from AbstractUser Django - built in user model, can add extra columns if needed
 class User(AbstractUser):
     pass
@@ -12,6 +9,7 @@ class User(AbstractUser):
 class Listings(models.Model):
 
     listing_id      = models.AutoField(primary_key=True)
+    user_id         = models.ForeignKey(User, on_delete=models.CASCADE)
     title           = models.CharField(max_length=1000)
     description     = models.CharField(max_length=1000)
     IMG_URL         = models.CharField(max_length=1000)
