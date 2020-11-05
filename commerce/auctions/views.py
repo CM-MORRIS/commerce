@@ -1,13 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django import forms
 from datetime import date, datetime, timedelta
 from .forms import ListingsForm, BiddingForm
-from .models import User, Listings, Bids
+from .models import User, Listings, Bids, Watchlist
 from django.db.models import F
 from django.contrib import messages
 
@@ -110,7 +110,8 @@ def listing_page(request, id):
         try:
             listing = Listings.objects.get(pk=id)
 
-        except:
+        except Exception as e:
+            print ("Error: " + str(e))
             print("Error: Listing page not found")
             return HttpResponseRedirect(reverse("index"))
 
@@ -132,7 +133,7 @@ def bidding(request, id):
 
             new_bid_amount = bid_form.cleaned_data["new_bid"]
 
-            listing = Listings.objects.get(pk=id)
+            listing = get_object_or_404(Listings, pk=id)
 
             current_price = listing.current_price
 
@@ -155,13 +156,12 @@ def bidding(request, id):
                     listing.save()
 
                 # if cannot get from db
-                except:
-                    raise DoesNotExist("DoesNotExist")
+                except Exception as e:
+                    print ("Error: " + str(e))
                     return redirect('listing_page', id=id)
 
-                # valid
+                # great success
                 else:
-                    print("successful bid")
                     messages.success(request, 'Your bid was successful!', extra_tags='alert alert-success')
                     return redirect('listing_page', id=id)
 
@@ -178,3 +178,63 @@ def bidding(request, id):
     elif request.method == "GET":
         print("bidding view GET request")
         return redirect('listing_page', id=id)
+
+
+def watchlist(request):
+
+    # getting logged in user, 'request.user.id'
+    # get_object_or_404 is equivalent to MyModel.objects.get
+    current_user = get_object_or_404(User, id=request.user.id)
+
+    # try add bid to db
+    try:
+
+        # This list contains a dictionary. With soley listing_ids
+        # .values() returns a QuerySet that returns dictionaries, rather than model instances
+        # .values_list() returns list
+        watchlist_ids = Watchlist.objects.filter(user_id=current_user, is_on_list=True).values_list('listing_id')
+
+        # extract all listings from table that exist in 'watchlist_ids' list -
+        # us '__in' (listing_id__in) if filtering with a list (watchlist_ids)
+        watchlist_listings = Listings.objects.filter(listing_id__in=watchlist_ids)
+
+    except Exception as e:
+        print ("Error: " + str(e))
+        return render(request, "auctions/watchlist.html", { "watchlist_listings": None })
+
+    # great success
+    else:
+        return render(request, "auctions/watchlist.html", { "watchlist_listings": watchlist_listings })
+
+
+def add_to_watchlist(request, listing_id):
+
+    # getting logged in user, 'request.user.id'
+    current_user = get_object_or_404(User, id=request.user.id)
+
+    listing_to_add = get_object_or_404(Listings, pk=listing_id)
+
+    # if already on users watchlist, will go to exception 'Did not add to Watchlist'
+    is_on_watchlist = Watchlist.objects.filter(user_id=current_user, listing_id=listing_id, is_on_list=True).exists()
+
+    # if true, listing already in watchlist - redirect
+    if is_on_watchlist:
+        messages.error(request, 'Already in watchlist', extra_tags='alert alert-warning')
+        return redirect('listing_page', id=listing_id)
+
+    # try add to watchlist db
+    try:
+        add_listing_to_watchlist = Watchlist(user_id=current_user, listing_id=listing_to_add)
+        add_listing_to_watchlist.save()
+
+    # if cannot
+    except Exception as e:
+        print ("Error: " + str(e))
+        messages.error(request, 'Did not add to Watchlist', extra_tags='alert alert-warning')
+        return redirect('listing_page', id=listing_id)
+
+    # great success
+    else:
+        print("else run - success")
+        messages.success(request, 'Successfully added to Watchlist!', extra_tags='alert alert-success')
+        return redirect('listing_page', id=listing_id)

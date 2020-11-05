@@ -37,3 +37,10 @@ class Comments(models.Model):
     user_id     = models.ForeignKey(User, on_delete=models.CASCADE)
     listing_id  = models.ForeignKey(Listings, on_delete=models.CASCADE)
     comment     = models.CharField(max_length=1000)
+
+class Watchlist(models.Model):
+
+    watchlist_id = models.AutoField(primary_key=True)
+    user_id      = models.ForeignKey(User, on_delete=models.CASCADE)
+    listing_id   = models.ForeignKey(Listings, on_delete=models.CASCADE)
+    is_on_list   = models.BooleanField(default=True)
