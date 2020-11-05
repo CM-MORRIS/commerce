@@ -235,6 +235,31 @@ def add_to_watchlist(request, listing_id):
 
     # great success
     else:
-        print("else run - success")
         messages.success(request, 'Successfully added to Watchlist!', extra_tags='alert alert-success')
         return redirect('listing_page', id=listing_id)
+
+
+def watchlist_remove(request, listing_id):
+
+    if request.method == "GET":
+
+        # getting logged in user, 'request.user.id'
+        current_user = get_object_or_404(User, id=request.user.id)
+
+        listing_to_remove = get_object_or_404(Listings, pk=listing_id)
+
+        try:
+            Watchlist.objects.filter(user_id=current_user, listing_id=listing_to_remove).update(is_on_list=False)
+
+        # if cannot
+        except Exception as e:
+            print ("Error: " + str(e))
+            messages.error(request, 'Did not remove from Watchlist', extra_tags='alert alert-warning')
+            return redirect('watchlist')
+
+        # great success
+        else:
+            messages.success(request, 'Successfully removed from Watchlist!', extra_tags='alert alert-success')
+            return redirect('watchlist')
+
+    return redirect('watchlist')
