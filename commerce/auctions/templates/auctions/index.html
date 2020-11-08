@@ -1,9 +1,11 @@
 {% extends "auctions/layout.html" %}
 
-{% block body %}
-    <h2>All Active Listings</h2>
+{% block head %}
+  <h2>All Active Listings</h2>
+{% endblock %}
 
-    {% for listing in active_listings %}
+{% block body %}
+    {% for listing in listings %}
       <div class="active_listings">
         <div class="w3-container w3-black w3-center w3-allerta">
           <p class="w3-xlarge">{{ listing.title }}</p>
