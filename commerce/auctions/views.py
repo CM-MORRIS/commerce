@@ -14,11 +14,21 @@ from django.contrib import messages
 
 
 def index(request):
+
     active_listings = Listings.objects.filter(is_sold=False)
 
     return render(request, "auctions/index.html", {
-        "active_listings" : active_listings
+        "listings" : active_listings
     })
+
+def closed_listings(request):
+
+    closed_listings = Listings.objects.filter(is_sold=True)
+
+    return render(request, "auctions/closed_listings.html", {
+        "listings" : closed_listings
+    })
+
 
 
 def login_view(request):
@@ -144,11 +154,11 @@ def end_listing(request, listing_id, user_id):
 
 
     try:
-        Listings.objects.filter(listing_id=listing_id).update(is_sold=True)
+        Listings.objects.filter(listing_id=listing_id).update(is_sold=True, end_date=timezone.now())
 
 
     except Exception as e:
-        messages.error(request, 'Unable to end listing', extra_tags='alert alert-warning')
+        messages.error(request, "Unable to end listing" + str(e), extra_tags='alert alert-warning')
         return redirect('listing_page', id=listing_id)
 
 
