@@ -20,14 +20,6 @@
         <img src="{{ listing.IMG_URL }}">
       </div>
       <p>Description: {{ listing.description }}</p>
-      <div class="">
-        <p>
-          <form class="" action="{% url 'add_to_watchlist' listing.pk %}"  method="POST">
-            <input type="submit" class="btn btn-dark" name="add_to_watchlist" value="Add to Watchlist"></input>
-            {% csrf_token %}​​​​
-          </form>
-        </p>
-      </div>
       <p>Category: {{ listing.category }}</p>
       <p>Starting Price: {{ listing.starting_price }}</p>
       <p>Current Price: {{ listing.current_price }}</p>
@@ -37,7 +29,10 @@
       <br>
     </div>
 
+    <!-- show bidding and watchlist buttons if listing is active -->
+    {% if listing.is_sold == False %}
 
+    <!-- Place a new bid button if listing is active -->
     <div class="">
       <form class="bid" action="{% url 'bidding' listing.pk %}" method="POST">
         {% csrf_token %}​​​​
@@ -45,6 +40,33 @@
         <button type="new_bid" class="btn btn-primary" name="button">Bid</button>
       </form>
     </div>
+
+    <!-- Add to watchlist button -->
+    <div class="watchlist">
+        <form class="" action="{% url 'add_to_watchlist' listing.pk %}"  method="POST">
+          <input type="submit" class="btn btn-dark" name="add_to_watchlist" value="Add to Watchlist"></input>
+          {% csrf_token %}​​​​
+        </form>
+    </div>
+
+    <!-- Declare listing over and show winner -->
+    {% else %}
+
+    Listing winner: {{ winner }}
+
+    {% endif %}
+
+    <!-- If current logged in user created this listing show ability to end lisitng -->
+    {% if logged_in_user == listing.user_id and listing.is_sold == False %}
+    <div class="listing">
+      <form class="listing" action="{% url 'end_listing' listing.pk logged_in_user.id %}" method="POST">
+        {% csrf_token %}​​​​
+        <button type="end_listing" class="btn btn-warning" name="button">End listing</button>
+      </form>
+    </div>
+    {% endif %}
+
+
 
 
 

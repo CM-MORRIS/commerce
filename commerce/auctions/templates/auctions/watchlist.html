@@ -32,6 +32,7 @@
         <a href="{% url 'watchlist_remove' listing.listing_id %}" class="btn btn-dark">Remove from watchlist</a>
       </div>
 
+    <!-- if watchlist_listings is empty list -->
     {% empty %}
     <li>
       <h1>Sorry, no items in your watchlist.</h1>

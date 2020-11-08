@@ -107,8 +107,23 @@ def listing_page(request, id):
 
     if request.method == "GET":
 
+        # if listing has ended this variable will be set to the winners username
+        winner = None
+
         try:
             listing = Listings.objects.get(pk=id)
+
+            # if listing has ended set the winner
+            if (listing.is_sold):
+
+                # get winning bid from bids table
+                winning_bid = Bids.objects.get(listing_id=id, bid_price=listing.current_price)
+
+                # extract username from winning bids user_id and reset the 'winner' variable
+                winner = winning_bid.user_id.username
+
+            # getting logged in user to pass to html
+            logged_in_user = User.objects.get(id=request.user.id)
 
         except Exception as e:
             print ("Error: " + str(e))
@@ -117,9 +132,33 @@ def listing_page(request, id):
 
         else:
             return render(request, "auctions/individual_listing.html", {
-                "listing" : listing,
-                "bid_form": BiddingForm()
+                "listing"           : listing,
+                "bid_form"          : BiddingForm(),
+                "logged_in_user"    : logged_in_user,
+                "winner"            : winner
             })
+
+
+# ends a listing
+def end_listing(request, listing_id, user_id):
+
+
+    try:
+        Listings.objects.filter(listing_id=listing_id).update(is_sold=True)
+
+
+    except Exception as e:
+        messages.error(request, 'Unable to end listing', extra_tags='alert alert-warning')
+        return redirect('listing_page', id=listing_id)
+
+
+    else:
+        messages.success(request, 'Listing has ended', extra_tags='alert alert-success')
+        return redirect('listing_page', id=listing_id)
+
+
+    return redirect('listing_page', id=listing_id)
+
 
 
 def bidding(request, id):
