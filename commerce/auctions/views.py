@@ -91,6 +91,7 @@ def create_listing(request):
         if form.is_valid():
 
             title           = form.cleaned_data["title"]
+            category        = form.cleaned_data["category"]
             description     = form.cleaned_data["description"]
             IMG_URL         = form.cleaned_data["IMG_URL"]
             starting_price  = form.cleaned_data["starting_price"]
@@ -100,7 +101,7 @@ def create_listing(request):
             # getting logged in user, 'request.user.id'
             current_user = User.objects.get(id=request.user.id)
 
-            create_listing = Listings(title = title, user_id=current_user, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
+            create_listing = Listings(title = title, category = category, user_id=current_user, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
             create_listing.save()
 
             return render(request, "auctions/create_listing.html", {
@@ -312,3 +313,36 @@ def watchlist_remove(request, listing_id):
             return redirect('watchlist')
 
     return redirect('watchlist')
+
+def categories(request):
+
+    CATEGORIES = [
+        'music',
+        'fashion',
+        'sporting_goods',
+        'electronics',
+        'jewellery_and_watches',
+        'motors',
+        'toys_and_games',
+        'collectables_and_antiques',
+        'home_and_garden',
+        'other'
+    ]
+    return render(request, "auctions/categories.html", {
+        "categories": CATEGORIES
+        })
+
+
+def category_listings(request, category):
+
+    # try:
+    # categories = Listings.objects.filter(category__in=category)
+    categories = Listings.objects.filter(category=category)
+    # except Exception as e:
+    #     print(str(e))
+    #     return HttpResponseRedirect(reverse("index"))
+
+    # else:
+    return render(request, "auctions/category_listings.html", {
+        "categories": categories
+        })
