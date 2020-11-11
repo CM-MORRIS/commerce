@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django import forms
 from datetime import date, datetime, timedelta
-from .forms import ListingsForm, BiddingForm
-from .models import User, Listings, Bids, Watchlist
+from .forms import ListingsForm, BiddingForm, AddCommentForm
+from .models import User, Listings, Bids, Watchlist, Comments
 from django.db.models import F
 from django.contrib import messages
 
@@ -114,7 +114,7 @@ def create_listing(request):
         })
 
 
-def listing_page(request, id):
+def listing_page(request, listing_id):
 
     if request.method == "GET":
 
@@ -122,13 +122,13 @@ def listing_page(request, id):
         winner = None
 
         try:
-            listing = Listings.objects.get(pk=id)
+            listing = Listings.objects.get(pk=listing_id)
 
             # if listing has ended set the winner
             if (listing.is_sold):
 
                 # get winning bid from bids table
-                winning_bid = Bids.objects.get(listing_id=id, bid_price=listing.current_price)
+                winning_bid = Bids.objects.get(listing_id=listing_id, bid_price=listing.current_price)
 
                 # extract username from winning bids user_id and reset the 'winner' variable
                 winner = winning_bid.user_id.username
@@ -136,6 +136,7 @@ def listing_page(request, id):
             # getting logged in user to pass to html
             logged_in_user = User.objects.get(id=request.user.id)
 
+            comment = Comments.objects.filter(listing_id=listing_id)
         except Exception as e:
             print ("Error: " + str(e))
             print("Error: Listing page not found")
@@ -146,7 +147,9 @@ def listing_page(request, id):
                 "listing"           : listing,
                 "bid_form"          : BiddingForm(),
                 "logged_in_user"    : logged_in_user,
-                "winner"            : winner
+                "winner"            : winner,
+                "add_comments"      : AddCommentForm(),
+                "comments"          : comment
             })
 
 
@@ -160,15 +163,15 @@ def end_listing(request, listing_id, user_id):
 
     except Exception as e:
         messages.error(request, "Unable to end listing" + str(e), extra_tags='alert alert-warning')
-        return redirect('listing_page', id=listing_id)
+        return redirect('listing_page', listing_id=listing_id)
 
 
     else:
         messages.success(request, 'Listing has ended', extra_tags='alert alert-success')
-        return redirect('listing_page', id=listing_id)
+        return redirect('listing_page', listing_id=listing_id)
 
 
-    return redirect('listing_page', id=listing_id)
+    return redirect('listing_page', listing_id=listing_id)
 
 
 
@@ -208,26 +211,26 @@ def bidding(request, id):
                 # if cannot get from db
                 except Exception as e:
                     print ("Error: " + str(e))
-                    return redirect('listing_page', id=id)
+                    return redirect('listing_page', listing_id=id)
 
                 # great success
                 else:
                     messages.success(request, 'Your bid was successful!', extra_tags='alert alert-success')
-                    return redirect('listing_page', id=id)
+                    return redirect('listing_page', listing_id=id)
 
             # bid not valid
             else:
                 messages.error(request, 'Bid too low! Please raise the amount', extra_tags='alert alert-danger')
-                return redirect('listing_page', id=id)
+                return redirect('listing_page', listing_id=id)
 
         # if form not valid
         else:
-            return redirect('listing_page', id=id)
+            return redirect('listing_page', listing_id=id)
 
 
     elif request.method == "GET":
         print("bidding view GET request")
-        return redirect('listing_page', id=id)
+        return redirect('listing_page', listing_id=id)
 
 
 def watchlist(request):
@@ -270,7 +273,7 @@ def add_to_watchlist(request, listing_id):
     # if true, listing already in watchlist - redirect
     if is_on_watchlist:
         messages.error(request, 'Already in watchlist', extra_tags='alert alert-warning')
-        return redirect('listing_page', id=listing_id)
+        return redirect('listing_page', listing_id=listing_id)
 
     # try add to watchlist db
     try:
@@ -281,12 +284,12 @@ def add_to_watchlist(request, listing_id):
     except Exception as e:
         print ("Error: " + str(e))
         messages.error(request, 'Did not add to Watchlist', extra_tags='alert alert-warning')
-        return redirect('listing_page', id=listing_id)
+        return redirect('listing_page', listing_id=listing_id)
 
     # great success
     else:
         messages.success(request, 'Successfully added to Watchlist!', extra_tags='alert alert-success')
-        return redirect('listing_page', id=listing_id)
+        return redirect('listing_page', listing_id=listing_id)
 
 
 def watchlist_remove(request, listing_id):
@@ -335,14 +338,41 @@ def categories(request):
 
 def category_listings(request, category):
 
-    # try:
-    # categories = Listings.objects.filter(category__in=category)
-    categories = Listings.objects.filter(category=category)
-    # except Exception as e:
-    #     print(str(e))
-    #     return HttpResponseRedirect(reverse("index"))
+    try:
+        categories = Listings.objects.filter(category=category)
+    except Exception as e:
+        print(str(e))
+        return HttpResponseRedirect(reverse("index"))
 
-    # else:
-    return render(request, "auctions/category_listings.html", {
+    else:
+        return render(request, "auctions/category_listings.html", {
         "categories": categories
         })
+
+
+def add_comments(request, listing_id):
+# pass comments from form (form from?)
+# Add commment to comment table along with listing and the u ser who made the comment
+#
+    if request.method == "POST":
+        form = AddCommentForm(request.POST)
+
+        if form.is_valid():
+
+            comment = form.cleaned_data["new_comment"]
+
+            current_listing = get_object_or_404(Listings, pk=listing_id)
+
+            user_id = User.objects.get(id=request.user.id)
+
+            current_user = get_object_or_404(User, id=user_id.id)
+
+            add_comments = Comments(user_id=current_user, listing_id=current_listing, comment=comment)
+            add_comments.save()
+
+            messages.success(request, 'Successfully added comment!', extra_tags='alert alert-success')
+            return redirect('listing_page', listing_id=listing_id)
+
+    else:
+
+        return redirect('listing_page', listing_id=listing_id)

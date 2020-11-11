@@ -24,3 +24,6 @@ class ListingsForm(forms.Form):
 
 class BiddingForm(forms.Form):
     new_bid = forms.DecimalField()
+
+class AddCommentForm(forms.Form):
+    new_comment = forms.CharField()
