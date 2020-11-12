@@ -29,6 +29,7 @@
       <br>
     </div>
 
+
     <!-- show bidding and watchlist buttons if listing is active -->
     {% if listing.is_sold == False %}
 
@@ -66,8 +67,22 @@
     </div>
     {% endif %}
 
+    <h2> Add a Comment </h2>
+    <div class="add_comments">
+      <form class="add_comments" action="{% url 'add_comments' listing.pk %}" method=POST>
+       {% csrf_token %}
+        {{ add_comments }}
+      <button type="submit_comment" class="btn" name="button">Submit</button>
+     </form>
+    </div>
 
-
+    <h3> Comments </h3>
+    {% for comment in comments %}
+    <li>
+      {{ comment.comment }}
+    </li>
+    <div class="display_comments">
+    {% endfor %}
 
 
 
