@@ -15,7 +15,7 @@ CATEGORY_CHOICES = (
 
 class ListingsForm(forms.Form):
     title = forms.CharField()
-    categories = forms.CharField(label="Cat-E-Gory",
+    category = forms.CharField(label="Cat-E-Gory",
     widget=forms.Select(choices=CATEGORY_CHOICES))
     description = forms.CharField()
     IMG_URL = forms.CharField()
@@ -24,3 +24,6 @@ class ListingsForm(forms.Form):
 
 class BiddingForm(forms.Form):
     new_bid = forms.DecimalField()
+
+class AddCommentForm(forms.Form):
+    new_comment = forms.CharField()
