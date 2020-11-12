@@ -1,34 +1,29 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from django import forms
-from datetime import date, datetime, timedelta
-from .forms import ListingsForm, BiddingForm, AddCommentForm
-from .models import User, Listings, Bids, Watchlist, Comments
-from django.db.models import F
+from datetime import datetime, timedelta
+from .forms import ListingsForm, BiddingForm
+from .models import User, Listings, Bids, Watchlist
 from django.contrib import messages
 
 
-
 def index(request):
-
     active_listings = Listings.objects.filter(is_sold=False)
 
     return render(request, "auctions/index.html", {
-        "listings" : active_listings
+        "active_listings": active_listings
     })
+
 
 def closed_listings(request):
-
-    closed_listings = Listings.objects.filter(is_sold=True)
+    all_closed_listings = Listings.objects.filter(is_sold=True)
 
     return render(request, "auctions/closed_listings.html", {
-        "listings" : closed_listings
+        "all_closed_listings": all_closed_listings
     })
-
 
 
 def login_view(request):
@@ -84,38 +79,35 @@ def register(request):
 
 
 def create_listing(request):
-
     if request.method == "POST":
         form = ListingsForm(request.POST)
 
         if form.is_valid():
-
-            title           = form.cleaned_data["title"]
-            category        = form.cleaned_data["category"]
-            description     = form.cleaned_data["description"]
-            IMG_URL         = form.cleaned_data["IMG_URL"]
-            starting_price  = form.cleaned_data["starting_price"]
-            number_of_days  = form.cleaned_data["number_of_days"]
-            end_date        = datetime.today() + timedelta(days=number_of_days)
+            title = form.cleaned_data["title"]
+            description = form.cleaned_data["description"]
+            img_url = form.cleaned_data["IMG_URL"]
+            starting_price = form.cleaned_data["starting_price"]
+            number_of_days = form.cleaned_data["number_of_days"]
+            end_date = datetime.today() + timedelta(days=number_of_days)
 
             # getting logged in user, 'request.user.id'
             current_user = User.objects.get(id=request.user.id)
 
-            create_listing = Listings(title = title, category = category, user_id=current_user, description = description, IMG_URL = IMG_URL, starting_price = starting_price, current_price = starting_price, end_date = end_date)
-            create_listing.save()
+            new_listing = Listings(title=title, user_id=current_user, description=description, IMG_URL=img_url,
+                                   starting_price=starting_price, current_price=starting_price, end_date=end_date)
+            new_listing.save()
 
             return render(request, "auctions/create_listing.html", {
-                "form": ListingsForm()
+                "create_listing_form": ListingsForm()
             })
 
     else:
         return render(request, "auctions/create_listing.html", {
-            "form": ListingsForm()
+            "create_listing_form": ListingsForm()
         })
 
 
 def listing_page(request, listing_id):
-
     if request.method == "GET":
 
         # if listing has ended this variable will be set to the winners username
@@ -125,8 +117,7 @@ def listing_page(request, listing_id):
             listing = Listings.objects.get(pk=listing_id)
 
             # if listing has ended set the winner
-            if (listing.is_sold):
-
+            if listing.is_sold:
                 # get winning bid from bids table
                 winning_bid = Bids.objects.get(listing_id=listing_id, bid_price=listing.current_price)
 
@@ -136,47 +127,33 @@ def listing_page(request, listing_id):
             # getting logged in user to pass to html
             logged_in_user = User.objects.get(id=request.user.id)
 
-            comment = Comments.objects.filter(listing_id=listing_id)
         except Exception as e:
-            print ("Error: " + str(e))
-            print("Error: Listing page not found")
+            print("Error: " + str(e))
             return HttpResponseRedirect(reverse("index"))
 
         else:
             return render(request, "auctions/individual_listing.html", {
-                "listing"           : listing,
-                "bid_form"          : BiddingForm(),
-                "logged_in_user"    : logged_in_user,
-                "winner"            : winner,
-                "add_comments"      : AddCommentForm(),
-                "comments"          : comment
+                "listing": listing,
+                "bid_form": BiddingForm(),
+                "logged_in_user": logged_in_user,
+                "winner": winner
             })
 
 
-# ends a listing
-def end_listing(request, listing_id, user_id):
-
-
+def end_listing(request, listing_id):
     try:
         Listings.objects.filter(listing_id=listing_id).update(is_sold=True, end_date=timezone.now())
 
-
     except Exception as e:
         messages.error(request, "Unable to end listing" + str(e), extra_tags='alert alert-warning')
-        return redirect('listing_page', listing_id=listing_id)
-
+        return redirect('listing_page', id=listing_id)
 
     else:
         messages.success(request, 'Listing has ended', extra_tags='alert alert-success')
-        return redirect('listing_page', listing_id=listing_id)
+        return redirect('listing_page', id=listing_id)
 
 
-    return redirect('listing_page', listing_id=listing_id)
-
-
-
-def bidding(request, id):
-
+def bidding(request, bidding_id):
     # if bid is placed
     if request.method == "POST":
 
@@ -186,7 +163,7 @@ def bidding(request, id):
 
             new_bid_amount = bid_form.cleaned_data["new_bid"]
 
-            listing = get_object_or_404(Listings, pk=id)
+            listing = get_object_or_404(Listings, pk=bidding_id)
 
             current_price = listing.current_price
 
@@ -210,31 +187,28 @@ def bidding(request, id):
 
                 # if cannot get from db
                 except Exception as e:
-                    print ("Error: " + str(e))
-                    return redirect('listing_page', listing_id=id)
+                    print("Error: " + str(e))
+                    return redirect('listing_page', id=bidding_id)
 
                 # great success
                 else:
                     messages.success(request, 'Your bid was successful!', extra_tags='alert alert-success')
-                    return redirect('listing_page', listing_id=id)
+                    return redirect('listing_page', id=bidding_id)
 
             # bid not valid
             else:
                 messages.error(request, 'Bid too low! Please raise the amount', extra_tags='alert alert-danger')
-                return redirect('listing_page', listing_id=id)
+                return redirect('listing_page', id=bidding_id)
 
         # if form not valid
         else:
-            return redirect('listing_page', listing_id=id)
-
+            return redirect('listing_page', id=bidding_id)
 
     elif request.method == "GET":
-        print("bidding view GET request")
-        return redirect('listing_page', listing_id=id)
+        return redirect('listing_page', id=bidding_id)
 
 
 def watchlist(request):
-
     # getting logged in user, 'request.user.id'
     # get_object_or_404 is equivalent to MyModel.objects.get
     current_user = get_object_or_404(User, id=request.user.id)
@@ -242,7 +216,7 @@ def watchlist(request):
     # try add bid to db
     try:
 
-        # This list contains a dictionary. With soley listing_ids
+        # This list contains a dictionary of listing_ids
         # .values() returns a QuerySet that returns dictionaries, rather than model instances
         # .values_list() returns list
         watchlist_ids = Watchlist.objects.filter(user_id=current_user, is_on_list=True).values_list('listing_id')
@@ -252,16 +226,15 @@ def watchlist(request):
         watchlist_listings = Listings.objects.filter(listing_id__in=watchlist_ids)
 
     except Exception as e:
-        print ("Error: " + str(e))
-        return render(request, "auctions/watchlist.html", { "watchlist_listings": None })
+        print("Error: " + str(e))
+        return render(request, "auctions/watchlist.html", {"watchlist_listings": None})
 
     # great success
     else:
-        return render(request, "auctions/watchlist.html", { "watchlist_listings": watchlist_listings })
+        return render(request, "auctions/watchlist.html", {"watchlist_listings": watchlist_listings})
 
 
 def add_to_watchlist(request, listing_id):
-
     # getting logged in user, 'request.user.id'
     current_user = get_object_or_404(User, id=request.user.id)
 
@@ -273,7 +246,7 @@ def add_to_watchlist(request, listing_id):
     # if true, listing already in watchlist - redirect
     if is_on_watchlist:
         messages.error(request, 'Already in watchlist', extra_tags='alert alert-warning')
-        return redirect('listing_page', listing_id=listing_id)
+        return redirect('listing_page', id=listing_id)
 
     # try add to watchlist db
     try:
@@ -282,18 +255,17 @@ def add_to_watchlist(request, listing_id):
 
     # if cannot
     except Exception as e:
-        print ("Error: " + str(e))
+        print("Error: " + str(e))
         messages.error(request, 'Did not add to Watchlist', extra_tags='alert alert-warning')
-        return redirect('listing_page', listing_id=listing_id)
+        return redirect('listing_page', id=listing_id)
 
     # great success
     else:
         messages.success(request, 'Successfully added to Watchlist!', extra_tags='alert alert-success')
-        return redirect('listing_page', listing_id=listing_id)
+        return redirect('listing_page', id=listing_id)
 
 
 def watchlist_remove(request, listing_id):
-
     if request.method == "GET":
 
         # getting logged in user, 'request.user.id'
@@ -306,7 +278,7 @@ def watchlist_remove(request, listing_id):
 
         # if cannot
         except Exception as e:
-            print ("Error: " + str(e))
+            print("Error: " + str(e))
             messages.error(request, 'Did not remove from Watchlist', extra_tags='alert alert-warning')
             return redirect('watchlist')
 
@@ -316,63 +288,3 @@ def watchlist_remove(request, listing_id):
             return redirect('watchlist')
 
     return redirect('watchlist')
-
-def categories(request):
-
-    CATEGORIES = [
-        'music',
-        'fashion',
-        'sporting_goods',
-        'electronics',
-        'jewellery_and_watches',
-        'motors',
-        'toys_and_games',
-        'collectables_and_antiques',
-        'home_and_garden',
-        'other'
-    ]
-    return render(request, "auctions/categories.html", {
-        "categories": CATEGORIES
-        })
-
-
-def category_listings(request, category):
-
-    try:
-        categories = Listings.objects.filter(category=category)
-    except Exception as e:
-        print(str(e))
-        return HttpResponseRedirect(reverse("index"))
-
-    else:
-        return render(request, "auctions/category_listings.html", {
-        "categories": categories
-        })
-
-
-def add_comments(request, listing_id):
-# pass comments from form (form from?)
-# Add commment to comment table along with listing and the u ser who made the comment
-#
-    if request.method == "POST":
-        form = AddCommentForm(request.POST)
-
-        if form.is_valid():
-
-            comment = form.cleaned_data["new_comment"]
-
-            current_listing = get_object_or_404(Listings, pk=listing_id)
-
-            user_id = User.objects.get(id=request.user.id)
-
-            current_user = get_object_or_404(User, id=user_id.id)
-
-            add_comments = Comments(user_id=current_user, listing_id=current_listing, comment=comment)
-            add_comments.save()
-
-            messages.success(request, 'Successfully added comment!', extra_tags='alert alert-success')
-            return redirect('listing_page', listing_id=listing_id)
-
-    else:
-
-        return redirect('listing_page', listing_id=listing_id)
