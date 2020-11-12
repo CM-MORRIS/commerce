@@ -98,12 +98,12 @@ def create_listing(request):
             new_listing.save()
 
             return render(request, "auctions/create_listing.html", {
-                "listing_form": ListingsForm()
+                "create_listing_form": ListingsForm()
             })
 
     else:
         return render(request, "auctions/create_listing.html", {
-            "form": ListingsForm()
+            "create_listing_form": ListingsForm()
         })
 
 
