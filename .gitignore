@@ -1,12 +1,15 @@
-
+# ignore db and related files
 *.sqlite3
 commerce/auctions/migrations
+__pycache__
+
+# mac files
 .DS_Store
+
 *.egg-info
 *.pot
 *.py[co]
 .tox/
-__pycache__
 MANIFEST
 dist/
 docs/_build/
