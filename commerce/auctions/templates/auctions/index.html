@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    {% for listing in listings %}
+    {% for listing in active_listings %}
       <div class="active_listings">
         <div class="w3-container w3-black w3-center w3-allerta">
           <p class="w3-xlarge">{{ listing.title }}</p>
