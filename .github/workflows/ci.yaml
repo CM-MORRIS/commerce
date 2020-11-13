@@ -1,0 +1,27 @@
+# what this config will do:
+# checkout the code on an ubuntu vm (uses), install requirements for app to run (run), and run tests (run)
+
+# want to test the app.
+name: Testing
+
+# test on push
+on: push
+
+jobs:
+  test_project:
+
+    # github has virtual machines, want to run the app on this type of vm - 'ubuntu-latest' latest version of Linux
+    runs-on: ubuntu-latest
+    steps:
+
+    # will checkout code in a git repo on vm which will allow programs to be run on code
+    - uses: actions/checkout@v2
+
+    # just a description
+    - name: Run Django unit tests
+
+      # first install django as this is needed, then run test.py - tests created by developer
+      run: |
+        pip3 install --user django
+        cd commerce
+        python3 manage.py test
