@@ -22,4 +22,4 @@ class Tests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # accesses passed in parameters to render html
-        self.assertEqual(response.context["listings"].count(), 1)
+        self.assertEqual(response.context["active_listings"].count(), 1)
