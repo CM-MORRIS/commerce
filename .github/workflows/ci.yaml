@@ -1,7 +1,7 @@
 # what this config will do:
 # checkout the code on an ubuntu vm (uses), install requirements for app to run (run), and run tests (run)
 
-# want to test the app
+# want to test the app.
 name: Testing
 
 # test on push
