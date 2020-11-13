@@ -1,12 +1,12 @@
 {% extends "auctions/layout.html" %}
 
-
 {% block body %}
- {% for category in categories %}
- <div class="nav">
-     <li class="nav-item">
-         <a class="nav-link" href="{% url 'category_listings' category %}"> {{ category }}</a>
-     </li>
- </div>
-{% endfor %}
+    {% for cat1, cat2 in all_categories %}
+        <div class="nav">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'category_listings' cat1 %}"> {{ cat2 }}</a>
+            </li>
+        </div>
+    {% endfor %}
 {% endblock %}
+

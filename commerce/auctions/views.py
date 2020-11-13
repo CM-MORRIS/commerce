@@ -5,8 +5,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .forms import ListingsForm, BiddingForm
-from .models import User, Listings, Bids, Watchlist
+from .forms import ListingsForm, BiddingForm, CATEGORY_CHOICES, AddCommentForm
+from .models import User, Listings, Bids, Watchlist, Comments
 from django.contrib import messages
 
 
@@ -76,6 +76,26 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+
+def categories(request):
+    return render(request, "auctions/categories.html", {
+        "all_categories": CATEGORY_CHOICES
+    })
+
+
+def category_listings(request, category):
+    try:
+        listings_by_category = Listings.objects.filter(category=category)
+
+    except Exception as e:
+        print(str(e))
+        return HttpResponseRedirect(reverse("index"))
+
+    else:
+        return render(request, "auctions/category_listings.html", {
+            "categories": listings_by_category
+        })
 
 
 def create_listing(request):
@@ -288,3 +308,27 @@ def watchlist_remove(request, listing_id):
             return redirect('watchlist')
 
     return redirect('watchlist')
+
+
+def add_comments(request, listing_id):
+
+    if request.method == "POST":
+        comment_form = AddCommentForm(request.POST)
+
+        if comment_form.is_valid():
+            comment = comment_form.cleaned_data["new_comment"]
+
+            current_listing = get_object_or_404(Listings, pk=listing_id)
+
+            user_id = User.objects.get(id=request.user.id)
+
+            current_user = get_object_or_404(User, id=user_id.id)
+
+            add_user_comment = Comments(user_id=current_user, listing_id=current_listing, comment=comment)
+            add_user_comment.save()
+
+            messages.success(request, 'Successfully added comment!', extra_tags='alert alert-success')
+            return redirect('listing_page', listing_id=listing_id)
+
+    else:
+        return redirect('listing_page', listing_id=listing_id)
