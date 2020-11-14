@@ -1,6 +1,6 @@
 import unittest
 from django.test import Client, TestCase
-from commerce.commerce.auctions.models import User, Listings
+from auctions.models import User, Listings
 
 
 # Create your tests here.
