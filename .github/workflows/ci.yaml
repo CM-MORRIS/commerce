@@ -1,7 +1,7 @@
 # what this config will do:
 # checkout the code on an ubuntu vm (uses), install requirements for app to run (run), and run tests (run)
 
-# want to test the app
+# want to test the app.
 name: Testing
 
 # test on push
@@ -20,7 +20,8 @@ jobs:
     # just a description
     - name: Run Django unit tests
 
-      # first install django as this is needed, then run test.py - tests created by developer
+      # first install django as this is needed, cd into dir where 'manage.py' is located,
+      # then run tests - tests are created by developer
       run: |
         pip3 install --user django
         cd commerce

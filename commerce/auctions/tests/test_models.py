@@ -1,6 +1,6 @@
 import unittest
 from django.test import Client, TestCase
-from .models import User, Listings
+from auctions.models import User, Listings
 
 
 # Create your tests here.
@@ -11,9 +11,9 @@ class Tests(TestCase):
         user1 = User.objects.create(pk=1)
 
         # Create listings.
-        listing = Listings.objects.create(user_id=user1, title="listing test", description="test description",
-                                          IMG_URL="test url", category="music", starting_price=0.99,
-                                          current_price=0.99)
+        Listings.objects.create(user_id=user1, title="listing test", description="test description",
+                                IMG_URL="test url", category="music", starting_price=0.99,
+                                current_price=0.99)
 
     def test_index(self):
         c = Client()
@@ -22,4 +22,4 @@ class Tests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # accesses passed in parameters to render html
-        self.assertEqual(response.context["listings"].count(), 1)
+        self.assertEqual(response.context["active_listings"].count(), 1)
