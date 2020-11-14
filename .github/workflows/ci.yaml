@@ -20,7 +20,8 @@ jobs:
     # just a description
     - name: Run Django unit tests
 
-      # first install django as this is needed, then run test.py - tests created by developer
+      # first install django as this is needed, cd into dir where 'manage.py' is located,
+      # then run tests.py - tests are created by developer
       run: |
         pip3 install --user django
         cd commerce
